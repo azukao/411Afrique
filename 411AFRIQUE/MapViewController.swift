@@ -42,12 +42,12 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.subscribeToKeyboardNotifications()
+    //    self.subscribeToKeyboardNotifications()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.unsubscribeFromKeyboardNotification()
+      //  self.unsubscribeFromKeyboardNotification()
     }
     
     
@@ -66,7 +66,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
             appDelegate.longitude = longitude
             if appDelegate.longitude != nil {
             activityIndicator.stopAnimating()
-            activityIndicator.isHidden = false
+            activityIndicator.isHidden = true
             }
             let latDelta: CLLocationDegrees = 0.05
             let lonDelta: CLLocationDegrees = 0.05
@@ -79,8 +79,10 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
     }
     
        @IBAction func textFieldReturn(_ sender: AnyObject) {
-        sender.resignFirstResponder()
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating()
         performSearch()
+        
         
     }
     
@@ -110,11 +112,16 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
         let request = MKLocalSearchRequest()
         request.naturalLanguageQuery = searchText.text
         request.region = mapView.region
-        
+        activityIndicator.startAnimating()
         let search = MKLocalSearch(request: request)
         search.start { response, error in
             guard let response = response else {
                 print("There was an error searching for: \(request.naturalLanguageQuery) error: \(error)")
+                let alert = UIAlertController(title: "Alert", message: "Error Finding Location", preferredStyle: UIAlertControllerStyle.alert)
+                alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.default, handler: nil))
+                self.activityIndicator.stopAnimating()
+                self.activityIndicator.isHidden = true
+                self.present(alert, animated: true, completion: nil)
                 return
             }
             
@@ -124,6 +131,8 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
                 self.location = item.placemark.location
                 annotation.title = item.name
                 self.mapView.addAnnotation(annotation)
+                self.activityIndicator.stopAnimating()
+                self.activityIndicator.isHidden = true
             }
                self.appDelegate.latitude = (self.location?.coordinate.latitude)!
                self.appDelegate.longitude = (self.location?.coordinate.longitude)!

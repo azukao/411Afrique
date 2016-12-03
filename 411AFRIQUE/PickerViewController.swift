@@ -50,6 +50,13 @@ class PickerViewController: UIViewController {
                     self.navigationController?.pushViewController(ResultVC, animated: true)
                     print(success)
                 }
+                else {
+                    let alert = UIAlertController(title: "Alert", message: "Error Finding Business", preferredStyle: UIAlertControllerStyle.alert)
+                    alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.default, handler: nil))
+                    self.present(alert, animated: true, completion: nil)
+                    self.activityIndicator.stopAnimating()
+                    self.activityIndicator.isHidden = true
+                }
             }
             
         }

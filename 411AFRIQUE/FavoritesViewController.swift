@@ -17,14 +17,21 @@ class FavoritesViewController: UITableViewController {
     
     @IBOutlet var tableViewer: UITableView!
     
+    override func viewWillAppear(_ animated: Bool) {
+        if true {
+            refresh()
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationItem.title = "Favorite Locations"
-          tableViewer.reloadData()
+         // tableViewer.reloadData()
+        refresh()
 
     }
     
-    @IBAction func refresh(sender: AnyObject) {
+    func refresh() {
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         
         let managedContext = appDelegate.managedObjectContext

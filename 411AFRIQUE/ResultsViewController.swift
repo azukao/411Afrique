@@ -36,7 +36,6 @@ class ResultViewController: UITableViewController {
         }
         tableSource = TableSource()
         tableSource?.arrTableData = places as NSArray
-      //  tableSource?.arrTableData.remo
         tableViewer.dataSource = tableSource
         tableViewer.delegate = tableSource
     }

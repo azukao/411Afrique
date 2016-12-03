@@ -23,6 +23,7 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
     var applicationDelegate: AppDelegate?
     let appDelegate = UIApplication.shared.delegate as! AppDelegate
     let locationManager = CLLocationManager()
+    var location: CLLocation?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,6 +40,17 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
         }
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.subscribeToKeyboardNotifications()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.unsubscribeFromKeyboardNotification()
+    }
+    
+    
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         
@@ -52,6 +64,10 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
             let longitude = userLoction.coordinate.longitude
             print(longitude)
             appDelegate.longitude = longitude
+            if appDelegate.longitude != nil {
+            activityIndicator.stopAnimating()
+            activityIndicator.isHidden = false
+            }
             let latDelta: CLLocationDegrees = 0.05
             let lonDelta: CLLocationDegrees = 0.05
             let span:MKCoordinateSpan = MKCoordinateSpanMake(latDelta, lonDelta)
@@ -62,6 +78,12 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
         }
     }
     
+       @IBAction func textFieldReturn(_ sender: AnyObject) {
+        sender.resignFirstResponder()
+        performSearch()
+        
+    }
+    
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         if status == .authorizedWhenInUse {
             locationManager.requestLocation()
@@ -69,9 +91,45 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
     }
  
         func locationManager(_ manager: CLLocationManager, didFailWithError error: NSError) {
+            let alert = UIAlertController(title: "Alert", message: "Error Finding Location", preferredStyle: UIAlertControllerStyle.alert)
+            alert.addAction(UIAlertAction(title: "Ok", style: UIAlertActionStyle.default, handler: nil))
+            self.present(alert, animated: true, completion: nil)
             print("error:: (error)")
+            activityIndicator.stopAnimating()
+            activityIndicator.isHidden = true
         }
+    
+    func zoomIn(_ longitude: CLLocationDegrees, latitude: CLLocationDegrees) {
+        let span = MKCoordinateSpanMake(0.075, 0.075)
+        let region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), span: span)
+        mapView.setRegion(region, animated: true)
+    }
+    
+    
+    func performSearch() {
+        let request = MKLocalSearchRequest()
+        request.naturalLanguageQuery = searchText.text
+        request.region = mapView.region
         
+        let search = MKLocalSearch(request: request)
+        search.start { response, error in
+            guard let response = response else {
+                print("There was an error searching for: \(request.naturalLanguageQuery) error: \(error)")
+                return
+            }
+            
+            for item in response.mapItems {
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = item.placemark.coordinate
+                self.location = item.placemark.location
+                annotation.title = item.name
+                self.mapView.addAnnotation(annotation)
+            }
+               self.appDelegate.latitude = (self.location?.coordinate.latitude)!
+               self.appDelegate.longitude = (self.location?.coordinate.longitude)!
+               self.zoomIn(self.appDelegate.longitude, latitude: self.appDelegate.latitude)
+        }
+    }
         
         @IBAction func findMe(sender: AnyObject) {
             print("location")
@@ -113,5 +171,46 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
             }
             return Singleton.sharedInstance
         }
+    
+    func textFieldShouldReturn(_ textfield: UITextField) -> Bool {
+        textfield.resignFirstResponder()
+        return true;
+    }
+    
+    func getKeyboardHeight(_ notification: Notification) -> CGFloat {
+        let userInfo = notification.userInfo
+        let keyboardSize = userInfo![UIKeyboardFrameEndUserInfoKey] as!NSValue
+        return keyboardSize.cgRectValue.height
+    }
+    
+    func keyboardWillShow(_ notification: Notification) {
+        if searchText.isFirstResponder {
+            self.view.frame.origin.y = -getKeyboardHeight(notification)
+        }
+    }
+    
+    // writing the method to hide keyboard
+    func keyboardWillHide(_ notification: Notification) {
+        self.view.frame.origin.y = 0
+    }
+    
+    //  set method to subscribe keyboard
+    func subscribeToKeyboardNotifications()  {
+        NotificationCenter.default.addObserver(self, selector: #selector(MapViewController.keyboardWillShow(_:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(MapViewController.keyboardWillHide(_:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+    }
+    
+    //set unsubscribe method for keyboard
+    func unsubscribeFromKeyboardNotification() {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+    }
+    
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        searchText.resignFirstResponder()
+
+    }
+
+    
+    
         
 }

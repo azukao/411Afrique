@@ -20,13 +20,18 @@ class FavoritesViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.navigationItem.title = "Favorite Locations"
+          tableViewer.reloadData()
+
+    }
+    
+    @IBAction func refresh(sender: AnyObject) {
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         
         let managedContext = appDelegate.managedObjectContext
         
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName:"Results")
         fetchRequest.predicate = NSPredicate(format: "isFavorite = 1")
-    
+        
         do {
             let results = try managedContext.fetch(fetchRequest)
             places = results as! [NSManagedObject]
@@ -34,11 +39,12 @@ class FavoritesViewController: UITableViewController {
         } catch let error as NSError {
             print("Could not fetch \(error), \(error.userInfo)")
         }
-
-        tableSource = FavoriteTableview()
-        tableSource?.arrTableData = PlaceArray
-        tableViewer.reloadData()
-        tableViewer.dataSource = tableSource
-        tableViewer.delegate = tableSource
+        DispatchQueue.main.async  {
+            self.tableSource = FavoriteTableview()
+            self.tableSource?.arrTableData = self.PlaceArray
+              self.tableViewer.reloadData()
+            self.tableViewer.dataSource = self.tableSource
+            self.tableViewer.delegate = self.tableSource
+        }
     }
 }

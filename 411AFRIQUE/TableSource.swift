@@ -58,8 +58,8 @@ class TableSource:  NSObject, UITableViewDataSource, UITableViewDelegate {
         let predicate = NSPredicate(format:"id == %@", selctedID!)
         fetchRequest.predicate = predicate
         
-        
-        
+    
+    
         
         let results = try! managedContext.fetch(fetchRequest)       //execute(fetchRequest)
        
@@ -79,16 +79,16 @@ class TableSource:  NSObject, UITableViewDataSource, UITableViewDelegate {
         }
        
         
-        let fetchRequestSelect = NSFetchRequest<NSFetchRequestResult>(entityName: "Results")
+    //    let fetchRequestSelect = NSFetchRequest<NSFetchRequestResult>(entityName: "Results")
         
         //3
-        do {
-            let results = try managedContext.fetch(fetchRequestSelect)
+    //    do {
+    //        let results = try managedContext.fetch(fetchRequestSelect)
             
-            arrTableData = results as! [NSManagedObject] as NSArray
-        } catch let error as NSError {
-            print("Could not fetch \(error), \(error.userInfo)")
-        }
+    //        arrTableData = results as! [NSManagedObject] as NSArray
+    //    } catch let error as NSError {
+    //        print("Could not fetch \(error), \(error.userInfo)")
+    //    }
 
         tableView.reloadData()
     }
